@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sala Virtual — I.A. na Prática</title>
+<style>
+  :root{
+    --bg1:#0a0e27; --bg2:#150c33; --bg3:#1c0f3f;
+    --cyan:#38bdf8; --cyan-l:#7dd3fc; --purple:#8b5cf6; --yellow:#facc15;
+    --text:#e2e8ff; --text-dim:#94a3d8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; color:var(--text);
+    font-family:Arial, Helvetica, sans-serif;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(139,92,246,0.15), transparent 45%),
+      radial-gradient(circle at 80% 10%, rgba(56,189,248,0.12), transparent 45%),
+      linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%);
+    background-attachment:fixed;
+  }
+  a{color:inherit;}
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px; position:sticky; top:0; z-index:20;
+    background:rgba(10,14,39,0.85); backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(125,211,252,0.15);
+  }
+  .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:0.4px;}
+  .brand .orb{
+    width:36px; height:36px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--cyan-l), var(--cyan) 60%, #0369a1 100%);
+    box-shadow:0 0 16px rgba(56,189,248,0.6);
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:#06121f; font-weight:900;
+  }
+  header nav a{
+    margin-left:18px; font-size:14px; text-decoration:none; color:var(--text-dim); font-weight:600;
+  }
+  header nav a:hover{color:var(--cyan-l);}
+
+  .hero{padding:60px 24px 30px; max-width:1000px; margin:0 auto; text-align:center;}
+  .hero .badge{
+    display:inline-block; padding:6px 16px; border-radius:20px; font-size:12px; font-weight:800;
+    letter-spacing:0.6px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.4); color:var(--cyan-l);
+    margin-bottom:18px;
+  }
+  .hero h1{font-size:38px; margin:0 0 10px; letter-spacing:0.3px;}
+  .hero h1 span{color:var(--cyan-l);}
+  .hero p{color:var(--text-dim); font-size:16px; max-width:640px; margin:0 auto 22px; line-height:1.6;}
+
+  .norte-card{
+    display:flex; gap:18px; align-items:center; max-width:640px; margin:0 auto 10px;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(125,211,252,0.25); border-radius:16px; padding:18px 22px;
+    text-align:left;
+  }
+  .norte-avatar{
+    width:64px; height:64px; border-radius:50%; flex-shrink:0;
+    background:radial-gradient(circle at 40% 35%, #1c0f3f, #05070f);
+    border:2px solid var(--cyan); position:relative;
+  }
+  .norte-avatar svg{position:absolute; inset:0;}
+  .norte-card .txt strong{color:var(--cyan-l); display:block; margin-bottom:4px;}
+  .norte-card .txt{font-size:14px; color:var(--text-dim); line-height:1.5;}
+  .btn{
+    display:inline-block; padding:11px 22px; border-radius:24px; font-weight:800; font-size:13.5px;
+    text-decoration:none; cursor:pointer; border:none; letter-spacing:0.3px;
+  }
+  .btn-cyan{background:linear-gradient(135deg,var(--cyan),var(--cyan-l)); color:#06121f;}
+  .btn-ghost{background:transparent; border:1px solid rgba(125,211,252,0.4); color:var(--cyan-l);}
+
+  .weeks-wrap{max-width:1100px; margin:30px auto 80px; padding:0 24px;}
+  .module-title{
+    font-size:13px; text-transform:uppercase; letter-spacing:1.2px; color:var(--purple);
+    font-weight:800; margin:36px 0 14px; padding-left:4px;
+  }
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:16px;}
+  .card{
+    background:rgba(255,255,255,0.035); border:1px solid rgba(125,211,252,0.18); border-radius:14px;
+    padding:18px; cursor:pointer; transition:transform .15s, border-color .15s; text-decoration:none; color:var(--text);
+    display:flex; flex-direction:column; min-height:150px;
+  }
+  .card:hover{transform:translateY(-3px); border-color:rgba(125,211,252,0.5);}
+  .card .num{font-size:12px; font-weight:800; color:var(--cyan-l); letter-spacing:0.5px;}
+  .card .date{font-size:11px; color:var(--text-dim); margin-bottom:8px;}
+  .card h3{font-size:16px; margin:0 0 8px; line-height:1.3;}
+  .card .desc{font-size:12.5px; color:var(--text-dim); line-height:1.5; flex-grow:1;}
+  .card .tools{margin-top:10px; font-size:11px; color:#6b7299;}
+
+  /* Week detail view */
+  #week-view{display:none; max-width:820px; margin:0 auto; padding:30px 24px 100px;}
+  #week-view.active{display:block;}
+  #home-view.hidden{display:none;}
+  .back-link{display:inline-block; margin-bottom:20px; font-size:13.5px; color:var(--cyan-l); text-decoration:none; font-weight:700;}
+  .week-header{margin-bottom:22px;}
+  .week-header .num{font-size:13px; color:var(--purple); font-weight:800; letter-spacing:0.5px;}
+  .week-header h1{font-size:30px; margin:8px 0 6px;}
+  .week-header .date-badge{
+    display:inline-block; font-size:12px; background:rgba(250,204,21,0.12); border:1px solid rgba(250,204,21,0.35);
+    color:var(--yellow); padding:4px 12px; border-radius:14px; font-weight:700; margin-bottom:10px;
+  }
+  .question{
+    font-size:16px; font-style:italic; color:var(--cyan-l); border-left:3px solid var(--cyan);
+    padding:10px 16px; margin:16px 0 24px; background:rgba(56,189,248,0.06); border-radius:0 8px 8px 0;
+  }
+  .section{margin-bottom:26px;}
+  .section h2{font-size:14px; text-transform:uppercase; letter-spacing:0.8px; color:var(--purple); margin-bottom:10px;}
+  .section p, .section li{font-size:14.5px; line-height:1.7; color:#d5deff;}
+  .roteiro-item{
+    display:flex; gap:14px; margin-bottom:14px; background:rgba(255,255,255,0.03);
+    border:1px solid rgba(125,211,252,0.12); border-radius:10px; padding:12px 16px;
+  }
+  .roteiro-item .time{
+    flex-shrink:0; font-size:12px; font-weight:800; color:#06121f; background:var(--cyan-l);
+    border-radius:8px; padding:4px 8px; height:fit-content; white-space:nowrap;
+  }
+  .roteiro-item .body b{color:#fff;}
+  .tools-list{display:flex; flex-wrap:wrap; gap:8px;}
+  .tool-chip{
+    font-size:12.5px; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.35);
+    color:#c4b5fd; padding:6px 12px; border-radius:14px;
+  }
+  .norte-audio-box{
+    display:flex; align-items:center; gap:14px; background:rgba(56,189,248,0.07);
+    border:1px solid rgba(56,189,248,0.3); border-radius:14px; padding:16px 20px; margin-bottom:24px;
+  }
+  .play-btn{
+    width:46px; height:46px; border-radius:50%; background:var(--cyan); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .play-btn svg{width:18px; height:18px;}
+  .actions{display:flex; gap:12px; flex-wrap:wrap; margin:26px 0;}
+  .form-embed{
+    margin-top:10px; border-radius:14px; overflow:hidden; border:1px solid rgba(125,211,252,0.25);
+    min-height:520px; background:#fff;
+  }
+  .form-embed iframe{width:100%; height:520px; border:0; display:block;}
+  .next-week{
+    margin-top:34px; padding:16px 20px; border-radius:12px; background:rgba(139,92,246,0.08);
+    border:1px solid rgba(139,92,246,0.25); font-size:14px; color:#d5deff;
+  }
+  footer{text-align:center; padding:30px; color:#6b7299; font-size:12px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="orb">IA</div>
+    <span>SALA VIRTUAL — I.A. NA PRÁTICA</span>
+  </div>
+  <nav>
+    <a href="#" onclick="showHome();return false;">Semanas</a>
+  </nav>
+</header>
+
+<div id="home-view">
+  <section class="hero">
+    <span class="badge">2º SEMESTRE 2026 · SEXTAS-FEIRAS · 21/08 A 04/12</span>
+    <h1>Sua sala de aula <span>virtual</span></h1>
+    <p>Aqui você encontra o roteiro de cada sexta-feira, os materiais pra baixar, e envia o projeto da aula direto pra gente. Guiado pelo Norte, a IA da eletiva.</p>
+
+    <div class="norte-card">
+      <div class="norte-avatar">
+        <svg viewBox="0 0 64 64">
+          <g stroke="#38bdf8" stroke-width="1" opacity="0.9">
+            <line x1="32" y1="14" x2="32" y2="50"/>
+            <line x1="14" y1="32" x2="50" y2="32"/>
+            <line x1="20" y1="20" x2="44" y2="44"/>
+            <line x1="44" y1="20" x2="20" y2="44"/>
+          </g>
+          <circle cx="32" cy="32" r="4.2" fill="#7dd3fc"/>
+          <circle cx="32" cy="14" r="2.4" fill="#38bdf8"/>
+          <circle cx="32" cy="50" r="2.4" fill="#38bdf8"/>
+          <circle cx="14" cy="32" r="2.4" fill="#38bdf8"/>
+          <circle cx="50" cy="32" r="2.4" fill="#38bdf8"/>
+          <circle cx="20" cy="20" r="1.8" fill="#a78bfa"/>
+          <circle cx="44" cy="44" r="1.8" fill="#a78bfa"/>
+          <circle cx="44" cy="20" r="1.8" fill="#a78bfa"/>
+          <circle cx="20" cy="44" r="1.8" fill="#a78bfa"/>
+        </svg>
+      </div>
+      <div class="txt">
+        <strong>Oi! Eu sou o Norte.</strong>
+        Toda semana eu explico o que vamos fazer, e o Prof. André conduz a aula com você. Clique numa semana abaixo pra começar.
+      </div>
+    </div>
+  </section>
+
+  <div class="weeks-wrap" id="weeks-wrap"></div>
+</div>
+
+<div id="week-view">
+  <a href="#" class="back-link" onclick="showHome();return false;">← Voltar pra todas as semanas</a>
+  <div id="week-content"></div>
+</div>
+
+<footer>Eletiva I.A. na Prática — Prof. André e Norte · Rede Estadual de São Paulo</footer>
+
+<script>
+const MODULES = [
+  {title:"Módulo 1 — IA no cotidiano, nas profissões e nas decisões", weeks:[1,2,3]},
+  {title:"Módulo 2 — IA como parceira de escrita e comunicação", weeks:[4,5]},
+  {title:"Módulo 3 — Meu Negócio Digital: portfólio e empreendedorismo com IA", weeks:[6,7]},
+  {title:"Módulo 4 — Machine learning na prática: treinando minha própria IA", weeks:[8,9]},
+  {title:"Módulo 5 — Ética, direitos e bem-estar na era da IA", weeks:[10,11]},
+  {title:"Módulo 6 — Finalização, validação, pitch e storytelling", weeks:[12,13,14]},
+];
+
+const WEEKS = {
+  1:{
+    date:"28/08/2026", title:"Identificando as IAs",
+    subtitle:"Do algoritmo invisível ao meu primeiro protótipo de renda extra",
+    question:"Onde a IA já está no meu bolso — e como isso pode virar trabalho e renda para mim?",
+    objetivo:"Reconhecer a presença da IA no cotidiano e configurar, na prática, um primeiro assistente pessoal escrevendo comandos (prompts) claros e eficazes.",
+    roteiro:[
+      {t:"0–10 min", d:"<b>Abertura.</b> Provocação: quem já usou IA pra fazer trabalho de escola (quase todo mundo) x quem já usou pra criar algo — negócio, marca, produto (quase ninguém). Combinados de uso de celular/notebook."},
+      {t:"10–45 min", d:"<b>Atividade 1 — Refletindo sobre o uso da IA no cotidiano.</b> Em duplas/trios, discussão guiada sobre como os apps 'adivinham' o que você quer, e o que aconteceria se os algoritmos parassem de funcionar por um dia. Mapa visual coletivo na lousa."},
+      {t:"45–90 min", d:"<b>Atividade 2 — Laboratório de prompts: meu primeiro assistente pessoal.</b> Estrutura de um comando eficaz (contexto + tarefa + formato + tom). Missão 1: plano de organização pessoal estilizado. Missão 2: protocolo antiprocrastinação. Missão 3 (bônus): a IA sugere 3 ideias de mini-negócio com base nas habilidades da dupla — guardem essa ideia pra Semana 6."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Pitch relâmpago de 60 segundos por dupla (uma descoberta + a ideia de negócio). Entrega da Faixa Branca do Cinturão de IA."},
+    ],
+    ferramentas:["Google Gemini","ChatGPT","Microsoft Copilot (alternativa sem login)"],
+    proxima:"Semana 2 (04/09) — vamos usar o Perplexity pra pesquisar como a IA está mudando a profissão dos sonhos de cada um, e retomar a ideia de negócio da Missão 3.",
+    hasAudio:true
+  },
+  2:{
+    date:"04/09/2026", title:"IA e o futuro das profissões",
+    subtitle:"Da curiosidade sobre carreira à validação de uma ideia real",
+    question:"Como a IA está mudando a profissão que eu sonho ter — e onde entra a oportunidade pra mim?",
+    objetivo:"Pesquisar o impacto da IA na profissão dos sonhos de cada estudante e começar a validar a ideia de negócio surgida na Semana 1.",
+    roteiro:[
+      {t:"0–10 min", d:"<b>Abertura.</b> Retomada da ideia de negócio da Missão 3 (Semana 1)."},
+      {t:"10–50 min", d:"<b>Atividade 1 — Pesquisa guiada.</b> Usando o Perplexity, cada dupla pesquisa como a IA está transformando a profissão escolhida: tarefas que somem, tarefas que surgem, habilidades que ganham valor."},
+      {t:"50–90 min", d:"<b>Atividade 2 — Teste de mercado simples.</b> A IA ajuda a definir pra quem serve a ideia de negócio e monta 3 perguntas de validação pra testar com pessoas reais fora da sala."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Registro da ideia validada (ou ajustada) + pitch de 30 segundos."},
+    ],
+    ferramentas:["Perplexity"],
+    proxima:"Semana 3 (11/09) — vamos usar a IA como apoio pra tomada de decisão, simulando cenários de negócio e analisando riscos.",
+    hasAudio:false
+  },
+  3:{
+    date:"11/09/2026", title:"IA na tomada de decisões",
+    subtitle:"Simulando cenários de negócio e riscos com apoio de IA",
+    question:"Se a IA decidisse por mim, eu confiaria? E se fosse pelo meu negócio?",
+    objetivo:"Simular cenários de negócio e risco usando a IA como apoio — não substituta — da tomada de decisão.",
+    roteiro:[
+      {t:"0–10 min", d:"<b>Abertura.</b> Discussão sobre decisões automatizadas no dia a dia (recomendações, filtros de feed, sugestões de compra)."},
+      {t:"10–55 min", d:"<b>Atividade 1 — Simulação de cenário.</b> A IA analisa duas opções de decisão para o negócio/projeto da dupla e lista prós, contras e riscos de cada uma."},
+      {t:"55–90 min", d:"<b>Atividade 2 — Humano x IA.</b> A dupla decide sozinha primeiro, sem consultar a IA, e só depois compara com a sugestão dela — discutindo onde bateu e onde divergiu."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Roda de reflexão: quando faz sentido confiar na IA, e quando é preciso questionar."},
+    ],
+    ferramentas:["ChatGPT","Google Gemini"],
+    proxima:"Semana 4 (18/09) — vamos fechar o Módulo 1 e abrir o Módulo 2 com uma redação 100% autoral, sem IA, como diagnóstico de escrita.",
+    hasAudio:false
+  },
+  4:{
+    date:"18/09/2026", title:"Redação 100% autoral (diagnóstico)",
+    subtitle:"Escrevendo sem rede de segurança, antes de comparar com a IA",
+    question:"Como eu escrevo quando ninguém — nem a IA — me ajuda?",
+    objetivo:"Produzir uma redação totalmente autoral, sem apoio de IA, servindo como diagnóstico honesto de escrita.",
+    roteiro:[
+      {t:"0–15 min", d:"<b>Abertura.</b> Por que escrever sem IA primeiro: essa versão vira a base de comparação da próxima semana."},
+      {t:"15–90 min", d:"<b>Atividade única.</b> Produção de uma redação dissertativa-argumentativa sobre um tema ligado a tecnologia/eletiva, 100% autoral, sem qualquer apoio de IA."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Entrega do texto e reflexão rápida sobre as maiores dificuldades sentidas na escrita."},
+    ],
+    ferramentas:["Nenhuma — propositalmente"],
+    proxima:"Semana 5 (25/09) — vamos comparar essa redação com o feedback da IA, e usar IA pra escrever um texto de venda (copywriting) do negócio.",
+    hasAudio:false
+  },
+  5:{
+    date:"25/09/2026", title:"Feedback da IA + copywriting",
+    subtitle:"Da crítica construtiva ao texto que vende",
+    question:"A IA melhora minha escrita, ou só troca minhas palavras?",
+    objetivo:"Avaliar criticamente o feedback da IA sobre a redação da Semana 4 e produzir um texto de venda (copywriting) para o negócio/projeto.",
+    roteiro:[
+      {t:"0–10 min", d:"<b>Abertura.</b> Cada dupla relê a própria redação autoral da Semana 4."},
+      {t:"10–50 min", d:"<b>Atividade 1 — Feedback estruturado.</b> Pedir à IA um feedback sobre clareza, argumentação e gramática, e avaliar juntos o que é realmente útil versus genérico."},
+      {t:"50–90 min", d:"<b>Atividade 2 — Copywriting.</b> Usar a IA pra escrever um texto de venda curto para o negócio/projeto da dupla."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Leitura em voz alta de 2 ou 3 textos de venda pra turma toda."},
+    ],
+    ferramentas:["ChatGPT","Google Gemini"],
+    proxima:"Semana 6 (02/10) — início do Módulo 3: vamos criar nome, marca e identidade visual do negócio com IA de imagem.",
+    hasAudio:false
+  },
+  6:{
+    date:"02/10/2026", title:"Nome, marca e identidade visual",
+    subtitle:"Meu Negócio Digital — Parte 1",
+    question:"Como transformar uma ideia solta numa marca em que as pessoas confiam?",
+    objetivo:"Criar o nome, a marca e a identidade visual (logo) de um micro-negócio ou projeto social, usando IA de imagem.",
+    roteiro:[
+      {t:"0–10 min", d:"<b>Abertura.</b> O que faz uma marca parecer profissional — exemplos rápidos de antes/depois."},
+      {t:"10–45 min", d:"<b>Atividade 1 — Brainstorm de nome.</b> Geração de opções de nome com IA de texto, a partir da ideia validada nas semanas anteriores."},
+      {t:"45–90 min", d:"<b>Atividade 2 — Identidade visual.</b> Geração de logo e paleta de cores com IA de imagem."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Votação da turma nos 3 melhores logos do dia."},
+    ],
+    ferramentas:["Canva (Magic Studio / IA)","Ideogram","Bing Image Creator"],
+    proxima:"Semana 7 (09/10) — vamos construir o portfólio/site digital que funciona como vitrine do negócio.",
+    hasAudio:false
+  },
+  7:{
+    date:"09/10/2026", title:"Portfólio e site digital multimodal",
+    subtitle:"Meu Negócio Digital — Parte 2",
+    question:"Onde alguém vai clicar pra conhecer o meu trabalho?",
+    objetivo:"Construir um portfólio/site simples que funcione como vitrine profissional e comercial do negócio ou projeto.",
+    roteiro:[
+      {t:"0–10 min", d:"<b>Abertura.</b> Exemplos de portfólios simples e eficazes."},
+      {t:"10–45 min", d:"<b>Atividade 1 — Estrutura de conteúdo.</b> Com apoio de IA, organizar: quem sou, o que faço, o que ofereço, como falar comigo."},
+      {t:"45–90 min", d:"<b>Atividade 2 — Montagem no Google Sites.</b> Construção do site arrastando e soltando blocos, sem código, usando a marca/logo da Semana 6."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Publicação e compartilhamento do link com a turma."},
+    ],
+    ferramentas:["Google Sites","NotebookLM"],
+    proxima:"Semana 8 (16/10) — início do Módulo 4: primeiro contato com machine learning de verdade, no Teachable Machine.",
+    hasAudio:false
+  },
+  8:{
+    date:"16/10/2026", title:"Introdução ao Teachable Machine",
+    subtitle:"Mestre da Classificação — Parte 1",
+    question:"Dá pra ensinar um computador a reconhecer alguma coisa só mostrando exemplos?",
+    objetivo:"Criar o primeiro protótipo de um modelo de classificação, treinado pela própria dupla (projeto Mestre da Classificação).",
+    roteiro:[
+      {t:"0–10 min", d:"<b>Abertura.</b> O que é machine learning, explicado sem jargão técnico."},
+      {t:"10–40 min", d:"<b>Atividade 1 — Tour guiado.</b> Conhecendo a interface do Teachable Machine e como funciona o treino por exemplos."},
+      {t:"40–90 min", d:"<b>Atividade 2 — Primeiro modelo.</b> Cada dupla treina um modelo simples com 2 ou 3 classes (gestos, objetos ou imagens)."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Cada dupla testa o modelo da dupla vizinha."},
+    ],
+    ferramentas:["Teachable Machine (Google)"],
+    proxima:"Semana 9 (23/10) — vamos treinar e testar o modelo com mais profundidade, entendendo por que ele erra.",
+    hasAudio:false
+  },
+  9:{
+    date:"23/10/2026", title:"Treinamento e testes do modelo",
+    subtitle:"Mestre da Classificação — Parte 2",
+    question:"Por que meu modelo erra — e como eu conserto isso?",
+    objetivo:"Refinar o modelo de classificação da Semana 8, entendendo erros e ajustando os dados de treino.",
+    roteiro:[
+      {t:"0–15 min", d:"<b>Abertura.</b> Retomar o modelo da Semana 8 e listar os erros observados até agora."},
+      {t:"15–55 min", d:"<b>Atividade 1 — Mais dados.</b> Adicionar novos exemplos de treino nas classes que mais erram."},
+      {t:"55–90 min", d:"<b>Atividade 2 — Validação cruzada simples.</b> Testar o modelo com uma pessoa de fora da dupla."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Registrar a taxa de acerto atual — vira a linha de base pras Semanas 12 e 13."},
+    ],
+    ferramentas:["Teachable Machine (Google)"],
+    proxima:"Semana 10 (30/10) — início do Módulo 5: vamos falar sobre os limites saudáveis do uso de IA.",
+    hasAudio:false
+  },
+  10:{
+    date:"30/10/2026", title:"Limites da IA no suporte emocional",
+    subtitle:"Uso saudável e consciente da tecnologia",
+    question:"A IA pode ser minha amiga? Onde está o limite saudável?",
+    objetivo:"Discutir os limites da IA como apoio emocional e refletir sobre uso saudável de telas e IA no dia a dia.",
+    roteiro:[
+      {t:"0–20 min", d:"<b>Abertura.</b> Roda de conversa sobre uso pessoal de IA e redes sociais."},
+      {t:"20–55 min", d:"<b>Atividade 1 — Estudo de casos.</b> Análise de situações fictícias de uso excessivo ou dependência de IA/telas."},
+      {t:"55–90 min", d:"<b>Atividade 2 — Contrato pessoal.</b> Em grupo, construção de um 'contrato pessoal de uso saudável de IA'."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Cada grupo compartilha um combinado do seu contrato."},
+    ],
+    ferramentas:["Nenhuma — atividade de discussão"],
+    proxima:"Semana 11 (06/11) — vamos falar de LGPD e privacidade de dados aplicados ao negócio/projeto de cada dupla.",
+    hasAudio:false
+  },
+  11:{
+    date:"06/11/2026", title:"LGPD e privacidade de dados",
+    subtitle:"Aplicando a lei ao negócio ou projeto criado",
+    question:"Que dado meu — ou do meu cliente — eu estou entregando sem perceber?",
+    objetivo:"Compreender a LGPD e o Marco Civil da Internet, aplicando os conceitos de privacidade ao negócio/projeto de cada dupla.",
+    roteiro:[
+      {t:"0–15 min", d:"<b>Abertura.</b> O que é a LGPD, explicada em português simples."},
+      {t:"15–55 min", d:"<b>Atividade 1 — Mapeamento de dados.</b> Que dados o negócio/projeto da dupla coletaria de clientes ou usuários?"},
+      {t:"55–90 min", d:"<b>Atividade 2 — Política de privacidade.</b> Com apoio de IA, redigir uma política de privacidade simples pro negócio."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Check-list final de privacidade do projeto."},
+    ],
+    ferramentas:["ChatGPT ou Gemini (apoio na redação)"],
+    proxima:"Semana 12 (13/11) — início do Módulo 6: ajustes finais e testes de precisão do modelo de classificação.",
+    hasAudio:false
+  },
+  12:{
+    date:"13/11/2026", title:"Ajustes finais do modelo",
+    subtitle:"Preparando pra validação com público real",
+    question:"O que falta pro meu modelo ficar bom o suficiente pra mostrar pra alguém de fora?",
+    objetivo:"Fazer os ajustes finais e testes de precisão do modelo de classificação antes da validação externa.",
+    roteiro:[
+      {t:"0–15 min", d:"<b>Abertura.</b> Revisão da taxa de acerto registrada desde a Semana 9."},
+      {t:"15–60 min", d:"<b>Atividade 1 — Ajuste fino.</b> Rodada final de melhorias nos dados de treino do modelo."},
+      {t:"60–90 min", d:"<b>Atividade 2 — Teste documentado.</b> Registro formal de acertos e erros do modelo."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Modelo 'congelado', pronto pra validação da Semana 13."},
+    ],
+    ferramentas:["Teachable Machine (Google)"],
+    proxima:"Semana 13 (20/11) — validação do modelo/negócio com público real, fora da sala de aula.",
+    hasAudio:false
+  },
+  13:{
+    date:"20/11/2026", title:"Validação com público real",
+    subtitle:"Testando fora da bolha da sala de aula",
+    question:"Meu modelo — ou meu negócio — funciona de verdade fora da nossa sala?",
+    objetivo:"Validar o modelo de classificação e/ou o negócio com pessoas de fora da dupla, coletando feedback real.",
+    roteiro:[
+      {t:"0–15 min", d:"<b>Abertura.</b> Como coletar feedback honesto, sem 'forçar elogio'."},
+      {t:"15–70 min", d:"<b>Atividade 1 — Teste externo.</b> Aplicar o modelo ou apresentar o negócio pra pelo menos 3 pessoas de fora da dupla."},
+      {t:"70–90 min", d:"<b>Atividade 2 — Registro.</b> Anotar o feedback recebido numa ficha simples."},
+      {t:"90–100 min", d:"<b>Fechamento.</b> Ajustar o pitch com base no que ouviram."},
+    ],
+    ferramentas:["Ficha de feedback (Google Forms)"],
+    proxima:"Semana 14 (27/11) — Pitch Day: fechamento do projeto e ensaio geral pra Culminância.",
+    hasAudio:false
+  },
+  14:{
+    date:"27/11/2026", title:"Pitch Day",
+    subtitle:"Fechamento do projeto e ensaio geral",
+    question:"Em 2 minutos, por que alguém deveria confiar no meu projeto?",
+    objetivo:"Concluir o projeto, criar peças de divulgação com IA e ensaiar o pitch final de 2 minutos pra Culminância.",
+    roteiro:[
+      {t:"0–15 min", d:"<b>Abertura.</b> Estrutura de um pitch vencedor: problema → solução → diferencial → chamada pra ação."},
+      {t:"15–60 min", d:"<b>Atividade 1 — Peças de divulgação.</b> Geração de vídeo curto e materiais de marketing com IA."},
+      {t:"60–95 min", d:"<b>Atividade 2 — Ensaio geral.</b> Pitch de 2 minutos com feedback dos colegas."},
+      {t:"95–100 min", d:"<b>Fechamento.</b> Pitch 'congelado', pronto pra Culminância em 04/12."},
+    ],
+    ferramentas:["CapCut IA","ElevenLabs","Gamma.app"],
+    proxima:"04/12/2026 — Culminância: Feira de Startups & Showcase de IA. É a sua vez de apresentar!",
+    hasAudio:false
+  },
+};
+
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc47omYHB9ELZ1WMrzdC9sdhXrIFpQT5D9f-WygwA5243gnag/viewform?embedded=true";
+
+function renderHome(){
+  const wrap = document.getElementById('weeks-wrap');
+  wrap.innerHTML = '';
+  MODULES.forEach(mod=>{
+    const h = document.createElement('div');
+    h.className = 'module-title';
+    h.textContent = mod.title;
+    wrap.appendChild(h);
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    mod.weeks.forEach(n=>{
+      const w = WEEKS[n];
+      const card = document.createElement('a');
+      card.href = '#semana-' + n;
+      card.className = 'card';
+      card.onclick = function(e){ e.preventDefault(); showWeek(n); };
+      card.innerHTML = '<div class="num">SEMANA ' + n + '</div>' +
+        '<div class="date">' + w.date + '</div>' +
+        '<h3>' + w.title + '</h3>' +
+        '<div class="desc">' + w.subtitle + '</div>' +
+        '<div class="tools">' + w.ferramentas.slice(0,2).join(' · ') + '</div>';
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+  });
+}
+
+function showWeek(n){
+  const w = WEEKS[n];
+  const c = document.getElementById('week-content');
+  let audioHtml = '';
+  if (w.hasAudio) {
+    audioHtml = '<div class="norte-audio-box">' +
+      '<button class="play-btn" onclick="playNorteAudio()"><svg viewBox="0 0 24 24" fill="#06121f"><path d="M8 5v14l11-7z"/></svg></button>' +
+      '<div><b>Ouça o Norte explicar a Semana ' + n + '</b><br><span style="color:#94a3d8;font-size:13px;">Espelhe a tela na TV e clique pra tocar</span></div>' +
+      '</div><audio id="norte-audio" src="audios/semana-' + n + '.mp3"></audio>';
+  }
+  c.innerHTML =
+    '<div class="week-header">' +
+      '<div class="num">SEMANA ' + n + ' DE 14</div>' +
+      '<h1>' + w.title + '</h1>' +
+      '<div class="date-badge">📅 ' + w.date + ' · 100 min (2×50min)</div>' +
+      '<div style="color:#94a3d8;font-size:14px;">' + w.subtitle + '</div>' +
+    '</div>' +
+    audioHtml +
+    '<div class="question">"' + w.question + '"</div>' +
+    '<div class="section"><h2>Objetivo da aula</h2><p>' + w.objetivo + '</p></div>' +
+    '<div class="section"><h2>Roteiro passo a passo</h2>' +
+      w.roteiro.map(r=>'<div class="roteiro-item"><div class="time">' + r.t + '</div><div class="body">' + r.d + '</div></div>').join('') +
+    '</div>' +
+    '<div class="section"><h2>Ferramentas de IA usadas</h2><div class="tools-list">' +
+      w.ferramentas.map(f=>'<span class="tool-chip">' + f + '</span>').join('') +
+    '</div></div>' +
+    '<div class="actions">' +
+      '<a class="btn btn-cyan" href="roteiros/semana-' + n + '.pdf" download>⬇ Baixar roteiro em PDF</a>' +
+    '</div>' +
+    '<div class="section"><h2>Poste o projeto de hoje</h2><p style="margin-bottom:10px;">Terminou a atividade? Envie aqui o projeto ou a intencionalidade da aula de hoje.</p>' +
+      '<div class="form-embed"><iframe src="' + FORM_URL + '">Carregando…</iframe></div>' +
+    '</div>' +
+    '<div class="next-week"><b>Próxima semana:</b> ' + w.proxima + '</div>';
+
+  document.getElementById('home-view').classList.add('hidden');
+  document.getElementById('week-view').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function playNorteAudio(){
+  const a = document.getElementById('norte-audio');
+  if (a) a.play();
+}
+
+function showHome(){
+  document.getElementById('home-view').classList.remove('hidden');
+  document.getElementById('week-view').classList.remove('active');
+  window.scrollTo(0,0);
+}
+
+renderHome();
+
+// roteamento simples por hash (permite compartilhar link direto de uma semana)
+function routeFromHash(){
+  const h = location.hash;
+  const m = h.match(/semana-(\d+)/);
+  if (m && WEEKS[m[1]]) showWeek(Number(m[1]));
+}
+window.addEventListener('hashchange', routeFromHash);
+routeFromHash();
+</script>
+
+</body>
+</html>
