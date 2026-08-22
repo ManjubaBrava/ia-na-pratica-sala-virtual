@@ -1,0 +1,44 @@
+SALA VIRTUAL — I.A. NA PRÁTICA
+================================
+
+SITE NO AR (link para os alunos):
+https://manjubabrava.github.io/ia-na-pratica-sala-virtual/
+
+Repositório GitHub (código-fonte, hospedagem gratuita):
+https://github.com/ManjubaBrava/ia-na-pratica-sala-virtual
+
+Formulário de envio de projeto (Google Forms, já embutido em cada
+semana do site):
+https://docs.google.com/forms/d/e/1FAIpQLSc47omYHB9ELZ1WMrzdC9sdhXrIFpQT5D9f-WygwA5243gnag/viewform
+
+CONTEÚDO DESTA PASTA
+---------------------
+index.html          → o site inteiro (1 arquivo só, HTML+CSS+JS)
+audios/semana-1.mp3 → narração do Norte pra abertura da Semana 1
+roteiros/semana-N.pdf → roteiro de aula em PDF de cada uma das 14 semanas,
+                         pra download direto no site
+
+COMO FUNCIONA
+-------------
+O site tem as 14 semanas da eletiva (28/08 a 04/12), organizadas em
+6 módulos. Cada semana tem: pergunta-guia, objetivo, roteiro passo a
+passo, ferramentas de IA usadas, botão de download do roteiro em PDF,
+e um formulário embutido pra o aluno enviar o projeto/intencionalidade
+daquela aula. A Semana 1 também tem um áudio do Norte explicando o que
+fazer (pra tocar espelhando a tela na TV).
+
+COMO ATUALIZAR O SITE DEPOIS
+------------------------------
+1. Edite o index.html (ou peça pro Claude editar).
+2. Entre em https://github.com/ManjubaBrava/ia-na-pratica-sala-virtual
+3. Clique no arquivo que mudou → ícone de lápis (editar) → cole o
+   conteúdo novo → "Commit changes".
+4. O site atualiza sozinho em menos de 1 minuto.
+
+Pra adicionar áudio de outra semana: gerar no ElevenLabs (voz "Norte"
+salva em "Minhas Vozes"), baixar o MP3, subir no GitHub dentro da
+pasta audios/ com o nome semana-N.mp3, e no index.html marcar
+hasAudio:true na semana correspondente (dentro do objeto WEEKS).
+
+Hospedagem: GitHub Pages, gratuita e sem prazo de expiração (fica no
+ar enquanto o repositório existir).
