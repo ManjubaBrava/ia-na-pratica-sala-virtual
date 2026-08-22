@@ -554,6 +554,13 @@ function showWeek(n){
     '<div class="section"><h2>Poste o projeto de hoje</h2><p style="margin-bottom:10px;">Terminou a atividade? Envie aqui o projeto ou a intencionalidade da aula de hoje.</p>' +
       '<div class="form-embed"><iframe src="' + FORM_URL + '">Carregando…</iframe></div>' +
     '</div>' +
+    '<div class="section"><h2>Peça feedback ao Norte</h2><p style="margin-bottom:10px;">Já enviou o formulário acima? Digite sua turma (igual você escreveu lá em cima) pra gente buscar o feedback falado do Norte sobre o seu projeto.</p>' +
+      '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px;">' +
+        '<input id="norte-fb-turma" type="text" placeholder="Sua turma" style="flex:1; min-width:200px; padding:11px 14px; border-radius:10px; border:1px solid rgba(125,211,252,0.3); background:rgba(255,255,255,0.04); color:#fff; font-size:14px;">' +
+        '<button class="btn btn-cyan" style="border:none; cursor:pointer;" onclick="norteRequestFeedback(' + n + ')">🎙️ Pedir feedback</button>' +
+      '</div>' +
+      '<div id="norte-fb-result"></div>' +
+    '</div>' +
     '<div class="next-week"><b>Próxima semana:</b> ' + w.proxima + '</div>';
 
   if (w.hasAudio) norteBindEvents();
@@ -564,19 +571,24 @@ function showWeek(n){
 }
 
 // ---- Norte: avatar de voz "vivo" (reage ao áudio de verdade via Web Audio API) ----
-let norteCtx, norteAnalyser, norteData, norteRAF;
-function norteToggle(){
-  const audio = document.getElementById('norte-audio');
+// Suporta múltiplos players na mesma página (narração da semana + feedback do projeto)
+// via um sufixo de id opcional: '' = narração (ids originais), 'fb' = feedback do Norte.
+let norteCtx;
+const norteInstances = {};
+function norteToggle(suffix){
+  suffix = suffix || '';
+  const sid = suffix ? '-' + suffix : '';
+  const audio = document.getElementById('norte-audio' + sid);
   if (!audio) return;
   if (audio.paused){
-    if (!norteCtx){
-      norteCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!norteCtx) norteCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!norteInstances[suffix]){
       const src = norteCtx.createMediaElementSource(audio);
-      norteAnalyser = norteCtx.createAnalyser();
-      norteAnalyser.fftSize = 64;
-      src.connect(norteAnalyser);
-      norteAnalyser.connect(norteCtx.destination);
-      norteData = new Uint8Array(norteAnalyser.frequencyBinCount);
+      const analyser = norteCtx.createAnalyser();
+      analyser.fftSize = 64;
+      src.connect(analyser);
+      analyser.connect(norteCtx.destination);
+      norteInstances[suffix] = {analyser: analyser, data: new Uint8Array(analyser.frequencyBinCount), raf: null};
     }
     if (norteCtx.state === 'suspended') norteCtx.resume();
     if (audio.ended) audio.currentTime = 0;
@@ -585,47 +597,182 @@ function norteToggle(){
     audio.pause();
   }
 }
-function norteBindEvents(){
-  const audio = document.getElementById('norte-audio');
-  const box = document.getElementById('norte-live');
-  const status = document.getElementById('norte-status');
-  const badge = document.getElementById('norte-badge');
+function norteBindEvents(suffix){
+  suffix = suffix || '';
+  const sid = suffix ? '-' + suffix : '';
+  const audio = document.getElementById('norte-audio' + sid);
+  const box = document.getElementById('norte-live' + sid);
+  const status = document.getElementById('norte-status' + sid);
+  const badge = document.getElementById('norte-badge' + sid);
   if (!audio) return;
   audio.addEventListener('play', function(){
     box.classList.remove('idle'); box.classList.add('talking');
     status.textContent = 'Norte está falando...';
     badge.textContent = '⏸ Pausar';
-    norteAnimateBars();
+    norteAnimateBars(suffix);
   });
   audio.addEventListener('pause', function(){
     box.classList.remove('talking'); box.classList.add('idle');
     badge.textContent = '🎧 Ouvir';
     if (!audio.ended) status.textContent = 'Pausado — toque pra continuar';
-    cancelAnimationFrame(norteRAF);
-    norteResetBars();
+    if (norteInstances[suffix]) cancelAnimationFrame(norteInstances[suffix].raf);
+    norteResetBars(suffix);
   });
   audio.addEventListener('ended', function(){
     box.classList.remove('talking'); box.classList.add('idle');
     status.textContent = 'Toque pra ouvir de novo';
     badge.textContent = '🎧 Ouvir';
-    cancelAnimationFrame(norteRAF);
-    norteResetBars();
+    if (norteInstances[suffix]) cancelAnimationFrame(norteInstances[suffix].raf);
+    norteResetBars(suffix);
   });
 }
-function norteAnimateBars(){
-  if (!norteAnalyser) return;
-  const bars = document.querySelectorAll('#norte-bars span');
+function norteAnimateBars(suffix){
+  suffix = suffix || '';
+  const inst = norteInstances[suffix];
+  if (!inst) return;
+  const sid = suffix ? '-' + suffix : '';
+  const bars = document.querySelectorAll('#norte-bars' + sid + ' span');
   if (!bars.length) return;
-  norteAnalyser.getByteFrequencyData(norteData);
-  const step = Math.max(1, Math.floor(norteData.length / bars.length));
+  inst.analyser.getByteFrequencyData(inst.data);
+  const step = Math.max(1, Math.floor(inst.data.length / bars.length));
   bars.forEach(function(b,i){
-    const v = norteData[i*step] || 0;
+    const v = inst.data[i*step] || 0;
     b.style.height = (6 + (v/255)*28) + 'px';
   });
-  norteRAF = requestAnimationFrame(norteAnimateBars);
+  inst.raf = requestAnimationFrame(function(){ norteAnimateBars(suffix); });
 }
-function norteResetBars(){
-  document.querySelectorAll('#norte-bars span').forEach(function(b){ b.style.height = '6px'; });
+function norteResetBars(suffix){
+  suffix = suffix || '';
+  const sid = suffix ? '-' + suffix : '';
+  document.querySelectorAll('#norte-bars' + sid + ' span').forEach(function(b){ b.style.height = '6px'; });
+}
+
+// ---- Norte: "Pedir feedback ao Norte" — busca na planilha publicada (CSV) o
+// feedback gerado pelo Apps Script (Gemini + ElevenLabs) para o projeto da dupla ----
+const NORTE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0FkAJAIt6AgPbTIwEjOvkW490D_AkggqKTWVmEzgBU2BIAciyvxcv3k2LFeQLIGMuddHJ1ASfO3qU/pub?gid=1445206558&single=true&output=csv";
+let norteFbPollTimer = null;
+let norteFbPollCount = 0;
+
+function norteEscapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function norteParseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (inQuotes){
+      if (c === '"'){
+        if (text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ','){ row.push(field); field = ''; }
+      else if (c === '\n'){ row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c === '\r'){ /* ignora */ }
+      else field += c;
+    }
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  if (!rows.length) return [];
+  const headers = rows[0];
+  return rows.slice(1).filter(function(r){ return r.length > 1 || r[0]; }).map(function(r){
+    const obj = {};
+    headers.forEach(function(h,i){ obj[h] = r[i] !== undefined ? r[i] : ''; });
+    return obj;
+  });
+}
+
+function norteFbSetState(html){
+  const el = document.getElementById('norte-fb-result');
+  if (el) el.innerHTML = html;
+}
+
+function norteRequestFeedback(n){
+  const turmaInput = document.getElementById('norte-fb-turma');
+  const turma = (turmaInput.value || '').trim();
+  if (!turma){
+    norteFbSetState('<p style="color:#facc15; font-size:13.5px; margin-top:12px;">Digite sua turma (igual você escreveu no formulário acima) antes de pedir o feedback.</p>');
+    return;
+  }
+  clearTimeout(norteFbPollTimer);
+  norteFbPollCount = 0;
+  norteFbSetState(
+    '<div class="norte-live thinking" id="norte-live-fb">' +
+      '<div class="norte-live-orb"><div class="ring ring1"></div><div class="ring ring2"></div><div class="ring ring3"></div>' +
+        '<div class="norte-live-core"><svg viewBox="0 0 24 24" fill="none" stroke="#06121f" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></div>' +
+      '</div>' +
+      '<div class="norte-live-bars" id="norte-bars-fb"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>' +
+      '<div class="norte-live-txt"><strong>Norte</strong><span id="norte-status-fb">Procurando seu envio da Semana ' + n + '...</span></div>' +
+    '</div>'
+  );
+  norteFbFetchAndCheck(n, turma);
+}
+
+function norteFbFetchAndCheck(n, turma){
+  fetch(NORTE_CSV_URL + (NORTE_CSV_URL.indexOf('?') > -1 ? '&' : '?') + '_ts=' + Date.now())
+    .then(function(r){ return r.text(); })
+    .then(function(text){
+      const rows = norteParseCSV(text);
+      const semanaLabel = 'Semana ' + n;
+      const matches = rows.filter(function(row){
+        return (row['Semana da aula'] || '').trim() === semanaLabel &&
+               (row['Turma'] || '').trim().toLowerCase() === turma.toLowerCase();
+      });
+      if (!matches.length){
+        norteFbPollCount++;
+        if (norteFbPollCount >= 6){
+          norteFbSetState('<p style="color:#facc15; font-size:13.5px; margin-top:12px;">Ainda não encontramos um envio da <b>Semana ' + n + '</b> pra turma "<b>' + norteEscapeHtml(turma) + '</b>". Confira se já enviou o formulário acima (a planilha pode levar alguns segundos pra atualizar) e toque em "Pedir feedback" de novo.</p>');
+          return;
+        }
+        const st = document.getElementById('norte-status-fb');
+        if (st) st.textContent = 'Ainda não achei seu envio, procurando de novo...';
+        norteFbPollTimer = setTimeout(function(){ norteFbFetchAndCheck(n, turma); }, 5000);
+        return;
+      }
+      const last = matches[matches.length - 1];
+      const status = (last['Status Feedback'] || '').trim();
+      if (status === 'Pronto'){
+        norteFbShowResult(n, last);
+      } else if (status.toLowerCase().indexOf('erro') === 0){
+        norteFbSetState('<p style="color:#f87171; font-size:13.5px; margin-top:12px;">Deu um probleminha ao gerar seu feedback (' + norteEscapeHtml(status) + '). Chama o Prof. André pra dar uma olhada.</p>');
+      } else {
+        const st = document.getElementById('norte-status-fb');
+        const box = document.getElementById('norte-live-fb');
+        if (box){ box.classList.remove('idle'); box.classList.add('thinking'); }
+        if (st) st.textContent = 'Norte está analisando seu projeto... (leva uns 20 segundos)';
+        norteFbPollTimer = setTimeout(function(){ norteFbFetchAndCheck(n, turma); }, 4000);
+      }
+    })
+    .catch(function(){
+      const st = document.getElementById('norte-status-fb');
+      if (st) st.textContent = 'Não consegui acessar a planilha agora, tentando de novo...';
+      norteFbPollTimer = setTimeout(function(){ norteFbFetchAndCheck(n, turma); }, 5000);
+    });
+}
+
+function norteFbShowResult(n, row){
+  const texto = row['Texto do Feedback (Norte)'] || '';
+  const audioUrl = row['Áudio Feedback (Norte)'] || '';
+  norteFbSetState(
+    (audioUrl ?
+      '<div class="norte-live idle" id="norte-live-fb" onclick="norteToggle(\'fb\')">' +
+        '<div class="norte-live-orb"><div class="ring ring1"></div><div class="ring ring2"></div><div class="ring ring3"></div>' +
+          '<div class="norte-live-core"><svg viewBox="0 0 24 24" fill="none" stroke="#06121f" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></div>' +
+        '</div>' +
+        '<div class="norte-live-bars" id="norte-bars-fb"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>' +
+        '<div class="norte-live-txt"><strong>Norte</strong><span id="norte-status-fb">Toque aqui — seu feedback está pronto!</span></div>' +
+        '<div class="norte-live-badge" id="norte-badge-fb">🎧 Ouvir</div>' +
+      '</div>' +
+      '<audio id="norte-audio-fb" src="' + audioUrl + '" preload="none"></audio>'
+      : '') +
+    (texto ? '<div style="margin-top:14px; padding:14px 16px; background:rgba(255,255,255,0.03); border:1px solid rgba(125,211,252,0.15); border-radius:12px; font-size:14px; line-height:1.6; color:#d5deff;">' + norteEscapeHtml(texto).replace(/\n/g,'<br>') + '</div>' : '')
+  );
+  if (audioUrl) norteBindEvents('fb');
 }
 
 function showHome(){
