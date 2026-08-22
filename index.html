@@ -580,17 +580,23 @@ function norteToggle(suffix){
   const sid = suffix ? '-' + suffix : '';
   const audio = document.getElementById('norte-audio' + sid);
   if (!audio) return;
+  // O áudio de feedback ('fb') vem do Google Drive, outra origem sem CORS liberado —
+  // ligar isso no Web Audio API deixaria o som mudo (áudio "tainted"). Só narração
+  // (mesma origem do site) passa pelo analisador pras barrinhas reagirem de verdade.
+  const useAnalyser = (suffix !== 'fb');
   if (audio.paused){
-    if (!norteCtx) norteCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (!norteInstances[suffix]){
-      const src = norteCtx.createMediaElementSource(audio);
-      const analyser = norteCtx.createAnalyser();
-      analyser.fftSize = 64;
-      src.connect(analyser);
-      analyser.connect(norteCtx.destination);
-      norteInstances[suffix] = {analyser: analyser, data: new Uint8Array(analyser.frequencyBinCount), raf: null};
+    if (useAnalyser){
+      if (!norteCtx) norteCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!norteInstances[suffix]){
+        const src = norteCtx.createMediaElementSource(audio);
+        const analyser = norteCtx.createAnalyser();
+        analyser.fftSize = 64;
+        src.connect(analyser);
+        analyser.connect(norteCtx.destination);
+        norteInstances[suffix] = {analyser: analyser, data: new Uint8Array(analyser.frequencyBinCount), raf: null};
+      }
+      if (norteCtx.state === 'suspended') norteCtx.resume();
     }
-    if (norteCtx.state === 'suspended') norteCtx.resume();
     if (audio.ended) audio.currentTime = 0;
     audio.play();
   } else {
