@@ -747,29 +747,23 @@ function norteFbFetchAndCheck(n, turma){
     });
 }
 
-function norteDriveEmbedUrl(url){
-  if (!url) return url;
-  return url.indexOf('export=download') !== -1 ? url.replace('export=download', 'export=view') : url;
+function norteDriveFileId(url){
+  if (!url) return '';
+  const m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : '';
 }
 function norteFbShowResult(n, row){
   const texto = row['Texto do Feedback (Norte)'] || '';
-  const audioUrl = norteDriveEmbedUrl(row['Áudio Feedback (Norte)'] || '');
+  const rawUrl = row['Áudio Feedback (Norte)'] || '';
+  const fileId = norteDriveFileId(rawUrl);
+  const viewUrl = fileId ? ('https://drive.google.com/file/d/' + fileId + '/view') : rawUrl;
   norteFbSetState(
-    (audioUrl ?
-      '<div class="norte-live idle" id="norte-live-fb" onclick="norteToggle(\'fb\')">' +
-        '<div class="norte-live-orb"><div class="ring ring1"></div><div class="ring ring2"></div><div class="ring ring3"></div>' +
-          '<div class="norte-live-core"><svg viewBox="0 0 24 24" fill="none" stroke="#06121f" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg></div>' +
-        '</div>' +
-        '<div class="norte-live-bars" id="norte-bars-fb"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>' +
-        '<div class="norte-live-txt"><strong>Norte</strong><span id="norte-status-fb">Toque aqui — seu feedback está pronto!</span></div>' +
-        '<div class="norte-live-badge" id="norte-badge-fb">🎧 Ouvir</div>' +
-      '</div>' +
-      '<audio id="norte-audio-fb" src="' + audioUrl + '" preload="none"></audio>'
+    (viewUrl ?
+      '<a class="btn btn-cyan" style="display:inline-flex; align-items:center; gap:8px; font-size:15px; padding:14px 26px; text-decoration:none;" href="' + viewUrl + '" target="_blank" rel="noopener">🎧 Ouvir feedback do Norte</a>' +
+      '<div style="margin-top:8px; font-size:12px; color:#94a3d8;">Abre em uma nova aba, direto do Google Drive.</div>'
       : '') +
-    (audioUrl ? '<div id="norte-fb-fallback" style="margin-top:8px;"><a class="btn btn-ghost" style="font-size:12px; padding:7px 14px;" href="' + audioUrl + '" target="_blank" rel="noopener">🔊 Não tocou? Abrir áudio em nova aba</a></div>' : '') +
     (texto ? '<div style="margin-top:14px; padding:14px 16px; background:rgba(255,255,255,0.03); border:1px solid rgba(125,211,252,0.15); border-radius:12px; font-size:14px; line-height:1.6; color:#d5deff;">' + norteEscapeHtml(texto).replace(/\n/g,'<br>') + '</div>' : '')
   );
-  if (audioUrl) norteBindEvents('fb');
 }
 
 function showHome(){
