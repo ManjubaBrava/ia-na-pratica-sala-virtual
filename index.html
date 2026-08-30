@@ -189,13 +189,21 @@
   /* ---- Tela dedicada do Norte (estilo painel de comando) ---- */
   .norte-screen{
     position:fixed; inset:0; z-index:60; display:none; flex-direction:column;
-    background:
-      radial-gradient(circle at 50% 0%, rgba(56,189,248,0.14), transparent 55%),
-      radial-gradient(circle at 15% 85%, rgba(139,92,246,0.12), transparent 50%),
-      linear-gradient(180deg, #050815 0%, #0a0e27 45%, #0d0730 100%);
-    overflow-y:auto;
+    background:linear-gradient(180deg, #050815 0%, #0a0e27 45%, #0d0730 100%);
+    overflow-y:auto; overflow-x:hidden;
   }
   .norte-screen.open{display:flex;}
+  .norte-screen::before, .norte-screen::after{
+    content:''; position:absolute; z-index:0; width:60vw; height:60vw; max-width:640px; max-height:640px;
+    border-radius:50%; filter:blur(70px); pointer-events:none;
+  }
+  .norte-screen::before{top:-10%; left:-10%; background:radial-gradient(circle, rgba(56,189,248,0.22), transparent 70%); animation:norteBlobFloat 14s ease-in-out infinite;}
+  .norte-screen::after{bottom:-15%; right:-10%; background:radial-gradient(circle, rgba(139,92,246,0.2), transparent 70%); animation:norteBlobFloat 18s ease-in-out infinite reverse;}
+  @keyframes norteBlobFloat{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(6%,8%) scale(1.15);}
+  }
+  .norte-screen-header, .norte-screen-body, .norte-bottom-nav, .norte-screen-close{position:relative; z-index:1;}
   .norte-screen-close{
     position:absolute; top:18px; right:22px; z-index:2; background:rgba(255,255,255,0.06);
     border:1px solid rgba(125,211,252,0.3); color:var(--text); width:34px; height:34px; border-radius:50%;
@@ -226,7 +234,18 @@
     font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--cyan-l); font-weight:800; margin-bottom:10px;
   }
   .norte-voice-wave{display:flex; align-items:center; gap:3px; height:34px; margin-bottom:8px;}
-  .norte-voice-wave span{flex:1; background:var(--cyan); border-radius:3px; height:6px; opacity:.55; transition:height .12s ease;}
+  .norte-voice-wave span{
+    flex:1; background:linear-gradient(180deg,var(--cyan-l),var(--cyan)); border-radius:3px; height:6px; opacity:.7;
+    transition:height .12s ease; animation:norteWaveIdle 2.2s ease-in-out infinite;
+  }
+  .norte-voice-wave span:nth-child(1){animation-delay:0s;} .norte-voice-wave span:nth-child(2){animation-delay:.1s;}
+  .norte-voice-wave span:nth-child(3){animation-delay:.2s;} .norte-voice-wave span:nth-child(4){animation-delay:.3s;}
+  .norte-voice-wave span:nth-child(5){animation-delay:.4s;} .norte-voice-wave span:nth-child(6){animation-delay:.5s;}
+  .norte-voice-wave span:nth-child(7){animation-delay:.4s;} .norte-voice-wave span:nth-child(8){animation-delay:.3s;}
+  .norte-voice-wave span:nth-child(9){animation-delay:.2s;} .norte-voice-wave span:nth-child(10){animation-delay:.1s;}
+  .norte-voice-wave span:nth-child(11){animation-delay:0s;} .norte-voice-wave span:nth-child(12){animation-delay:.1s;}
+  .norte-voice-wave.listening span{animation:none;}
+  @keyframes norteWaveIdle{0%,100%{height:6px; opacity:.55;} 50%{height:18px; opacity:.9;}}
   .norte-voice-hint{font-size:12.5px; color:var(--text-dim);}
   .norte-conv-box{margin-top:16px;}
   .norte-conv-box .norte-chat-msgs{max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:2px;}
@@ -235,26 +254,43 @@
 
   .norte-orb-col{display:flex; flex-direction:column; align-items:center; gap:20px; padding-top:6px;}
   .norte-hexring{position:relative; width:min(78vw,340px); height:min(78vw,340px); flex-shrink:0;}
+  .norte-hex-lines{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+  .norte-hex-lines line{stroke:rgba(56,189,248,0.28); stroke-width:.35; animation:norteLinePulse 3.2s ease-in-out infinite;}
+  .norte-hex-lines line:nth-child(odd){animation-delay:.5s;}
+  .norte-hex-lines line:nth-child(3n){animation-delay:1s;}
+  @keyframes norteLinePulse{0%,100%{opacity:.25;} 50%{opacity:.8;}}
+  .norte-orb-spin{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:46%; height:46%; border-radius:50%;
+    background:conic-gradient(from 0deg, transparent 0deg, rgba(56,189,248,0.55) 60deg, transparent 140deg, rgba(139,92,246,0.5) 210deg, transparent 300deg);
+    animation:norteSpin 7s linear infinite; filter:blur(1px);
+  }
+  @keyframes norteSpin{to{transform:translate(-50%,-50%) rotate(360deg);}}
   .norte-orb-big{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
     width:38%; height:38%; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
     background:radial-gradient(circle at 40% 32%, #0e1c3a, #05070f);
     border:2px solid var(--cyan); box-shadow:0 0 30px rgba(56,189,248,0.35);
+    animation:norteOrbFloat 4s ease-in-out infinite;
   }
+  @keyframes norteOrbFloat{0%,100%{box-shadow:0 0 30px rgba(56,189,248,0.35);} 50%{box-shadow:0 0 46px rgba(56,189,248,0.6);}}
   .norte-orb-big .ring{position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--cyan); opacity:0; animation:norteBreathe 2.6s ease-in-out infinite;}
   .norte-orb-big .ring.r2{animation-delay:.6s;}
   .norte-orb-big .ring.r3{animation-delay:1.2s;}
+  .norte-orb-big.talking{animation:norteTalkPulse .9s ease-in-out infinite;}
   .norte-orb-big.talking .ring{border-color:var(--yellow); animation-duration:1.1s;}
-  .norte-orb-core{position:relative; z-index:2; font-size:13px; font-weight:900; letter-spacing:2px; color:var(--cyan-l);}
+  .norte-orb-core{position:relative; z-index:2; font-size:13px; font-weight:900; letter-spacing:2px; color:var(--cyan-l); animation:norteCorePulse 2.4s ease-in-out infinite;}
+  @keyframes norteCorePulse{0%,100%{opacity:.85; text-shadow:0 0 8px rgba(125,211,252,.5);} 50%{opacity:1; text-shadow:0 0 16px rgba(125,211,252,.9);}}
   .norte-hex-node{
     position:absolute; width:88px; text-align:center; font-size:10.5px; letter-spacing:.5px; color:var(--text-dim);
     cursor:pointer; transform:translate(-50%,-50%);
   }
   .norte-hex-node .ic{
     width:44px; height:44px; margin:0 auto 6px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-    font-size:19px; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.4); transition:transform .15s, border-color .15s;
+    font-size:19px; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.4);
+    transition:transform .15s, border-color .15s; animation:norteHexGlow 3.6s ease-in-out infinite;
   }
-  .norte-hex-node:hover .ic{transform:translateY(-3px); border-color:var(--cyan-l);}
+  @keyframes norteHexGlow{0%,100%{box-shadow:0 0 0 rgba(139,92,246,0);} 50%{box-shadow:0 0 14px rgba(139,92,246,.55);}}
+  .norte-hex-node:hover .ic{transform:translateY(-3px) scale(1.08); border-color:var(--cyan-l);}
   .norte-hex-node span{display:block;}
 
   .norte-bottom-nav{
@@ -294,8 +330,9 @@
     .norte-screen-body{grid-template-columns:1fr; padding:16px 16px 10px;}
     .norte-panel + .norte-panel{margin-top:0;}
     .norte-orb-col{order:-1;}
-    .norte-hexring{display:none;}
-    .norte-orb-big{position:static; transform:none; width:130px; height:130px; margin:0 auto;}
+    .norte-hexring{width:150px; height:150px; margin:0 auto;}
+    .norte-hex-node, .norte-hex-lines, .norte-orb-spin{display:none;}
+    .norte-orb-big{width:150px; height:150px;}
   }
 </style>
 </head>
@@ -385,6 +422,17 @@
 
     <div class="norte-orb-col">
       <div class="norte-hexring" id="norte-hexring">
+        <svg class="norte-hex-lines" viewBox="0 0 100 100">
+          <line x1="50" y1="50" x2="50" y2="6"/>
+          <line x1="50" y1="50" x2="81.1" y2="18.9"/>
+          <line x1="50" y1="50" x2="94" y2="50"/>
+          <line x1="50" y1="50" x2="81.1" y2="81.1"/>
+          <line x1="50" y1="50" x2="50" y2="94"/>
+          <line x1="50" y1="50" x2="18.9" y2="81.1"/>
+          <line x1="50" y1="50" x2="6" y2="50"/>
+          <line x1="50" y1="50" x2="18.9" y2="18.9"/>
+        </svg>
+        <div class="norte-orb-spin"></div>
         <div class="norte-hex-node" style="top:6%; left:50%;" onclick="norteScreenGoto()"><div class="ic">🧠</div><span>IA no Cotidiano</span></div>
         <div class="norte-hex-node" style="top:18.9%; left:81.1%;" onclick="norteScreenGoto()"><div class="ic">✍️</div><span>Escrita &amp; Comunicação</span></div>
         <div class="norte-hex-node" style="top:50%; left:94%;" onclick="norteScreenGoto()"><div class="ic">💼</div><span>Negócio Digital</span></div>
@@ -992,7 +1040,6 @@ function norteFbShowResult(n, row){
 // então esse player usa o MESMO componente animado (bolinha + barrinhas) da narração lá em cima.
 const NORTE_ASK_WEBHOOK_URL = ""; // TODO: colar aqui a URL do webhook do N8N (ex: https://SEUNOME.app.n8n.cloud/webhook/norte-ask)
 let norteChatMsgCount = 0;
-let norteRecognition = null;
 
 function norteScreenOpen(){
   document.getElementById('norte-screen').classList.add('open');
@@ -1043,19 +1090,14 @@ function norteBase64ToBlob(base64, mime){
   return new Blob(byteArrays, {type: mime});
 }
 
-function norteChatSend(textoForcado){
-  const input = document.getElementById('norte-chat-input');
-  const pergunta = (textoForcado || (input ? input.value : '') || '').trim();
-  if (!pergunta) return;
-  if (input) input.value = '';
-
+function norteChatDispatch(payload, userBubbleHtml){
   if (!NORTE_ASK_WEBHOOK_URL){
-    norteChatAppend('user', norteEscapeHtml(pergunta));
+    if (userBubbleHtml) norteChatAppend('user', userBubbleHtml);
     norteChatAppend('norte', 'Ainda não estou conectado — o Prof. André precisa terminar de me configurar. Volta aqui daqui a pouco!');
     return;
   }
 
-  norteChatAppend('user', norteEscapeHtml(pergunta));
+  const userMsgEl = userBubbleHtml ? norteChatAppend('user', userBubbleHtml) : null;
 
   const suffix = 'c' + (norteChatMsgCount++);
   const msgEl = norteChatAppend('norte',
@@ -1071,10 +1113,13 @@ function norteChatSend(textoForcado){
   fetch(NORTE_ASK_WEBHOOK_URL, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ pergunta: pergunta, turma: localStorage.getItem('norteTurma') || '', semana: norteChatCurrentSemana() })
+    body: JSON.stringify(payload)
   })
   .then(function(r){ return r.json(); })
   .then(function(data){
+    // Se a pergunta veio por voz, o N8N transcreveu no servidor (ElevenLabs) — atualiza
+    // a bolha do usuário com o texto real assim que a resposta chega.
+    if (userMsgEl && data.pergunta) userMsgEl.textContent = data.pergunta;
     const texto = data.texto || 'Desculpa, não consegui pensar numa resposta agora.';
     let audioHtml = '';
     if (data.audio_base64){
@@ -1101,6 +1146,24 @@ function norteChatSend(textoForcado){
   });
 }
 
+function norteChatSend(textoForcado){
+  const input = document.getElementById('norte-chat-input');
+  const pergunta = (textoForcado || (input ? input.value : '') || '').trim();
+  if (!pergunta) return;
+  if (input) input.value = '';
+  norteChatDispatch(
+    { pergunta: pergunta, turma: localStorage.getItem('norteTurma') || '', semana: norteChatCurrentSemana() },
+    norteEscapeHtml(pergunta)
+  );
+}
+
+function norteChatSendAudio(base64, mimetype){
+  norteChatDispatch(
+    { audio_base64: base64, mimetype: mimetype, turma: localStorage.getItem('norteTurma') || '', semana: norteChatCurrentSemana() },
+    '🎙️ <i>Transcrevendo sua mensagem de voz...</i>'
+  );
+}
+
 let norteVoiceWaveTimer = null;
 function norteVoiceWaveAnimate(on){
   const bars = document.querySelectorAll('#norte-voice-wave span');
@@ -1110,43 +1173,59 @@ function norteVoiceWaveAnimate(on){
     bars.forEach(function(b){ b.style.height = (6 + Math.random()*28) + 'px'; b.style.opacity = '1'; });
   }, 110);
 }
-function norteChatListen(){
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition){
-    norteChatAppend('norte', 'Seu navegador não suporta reconhecimento de voz. Tenta digitar a pergunta.');
-    return;
-  }
+// ---- Gravação de voz real (MediaRecorder) — o áudio vai pro N8N, que usa a
+// transcrição da ElevenLabs (mesma voz/fornecedor do resto do Norte, em vez do
+// reconhecimento de voz genérico do navegador). ----
+let norteMediaRecorder = null;
+let norteAudioChunks = [];
+let norteRecordingStream = null;
+
+function norteVoiceUi(state, text){
   const micBtn = document.getElementById('norte-mic-big');
   const orb = document.getElementById('norte-orb-big');
   const hint = document.getElementById('norte-voice-hint');
-  if (norteRecognition){ norteRecognition.stop(); return; }
-  norteRecognition = new SpeechRecognition();
-  norteRecognition.lang = 'pt-BR';
-  norteRecognition.interimResults = false;
-  norteRecognition.maxAlternatives = 1;
-  if (micBtn) micBtn.classList.add('listening');
-  if (orb) orb.classList.add('talking');
-  if (hint) hint.textContent = 'Ouvindo... pode falar.';
-  norteVoiceWaveAnimate(true);
-  norteRecognition.onresult = function(e){
-    const texto = e.results[0][0].transcript;
-    if (hint) hint.textContent = '"' + texto + '"';
-    norteChatSend(texto);
-  };
-  norteRecognition.onerror = function(){
-    if (micBtn) micBtn.classList.remove('listening');
-    if (orb) orb.classList.remove('talking');
-    if (hint) hint.textContent = 'Toque no microfone e fale com o Norte...';
-    norteVoiceWaveAnimate(false);
-    norteRecognition = null;
-  };
-  norteRecognition.onend = function(){
-    if (micBtn) micBtn.classList.remove('listening');
-    if (orb) orb.classList.remove('talking');
-    norteVoiceWaveAnimate(false);
-    norteRecognition = null;
-  };
-  norteRecognition.start();
+  if (micBtn) micBtn.classList.toggle('listening', state === 'recording');
+  if (orb) orb.classList.toggle('talking', state === 'recording');
+  const wave = document.getElementById('norte-voice-wave');
+  if (wave) wave.classList.toggle('listening', state === 'recording');
+  norteVoiceWaveAnimate(state === 'recording');
+  if (hint) hint.textContent = text;
+}
+
+function norteChatListen(){
+  if (norteMediaRecorder && norteMediaRecorder.state === 'recording'){
+    norteMediaRecorder.stop();
+    return;
+  }
+  if (!navigator.mediaDevices || !window.MediaRecorder){
+    norteChatAppend('norte', 'Seu navegador não suporta gravação de áudio. Tenta digitar a pergunta.');
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(function(stream){
+      norteRecordingStream = stream;
+      norteAudioChunks = [];
+      norteMediaRecorder = new MediaRecorder(stream);
+      norteMediaRecorder.ondataavailable = function(e){ if (e.data.size > 0) norteAudioChunks.push(e.data); };
+      norteMediaRecorder.onstop = function(){
+        norteRecordingStream.getTracks().forEach(function(t){ t.stop(); });
+        norteVoiceUi('idle', 'Enviando sua mensagem...');
+        const mimetype = norteMediaRecorder.mimeType || 'audio/webm';
+        const blob = new Blob(norteAudioChunks, { type: mimetype });
+        const reader = new FileReader();
+        reader.onloadend = function(){
+          const base64 = String(reader.result).split(',')[1];
+          norteVoiceUi('idle', 'Toque no microfone e fale com o Norte...');
+          norteChatSendAudio(base64, mimetype);
+        };
+        reader.readAsDataURL(blob);
+      };
+      norteMediaRecorder.start();
+      norteVoiceUi('recording', 'Ouvindo... toque de novo pra enviar.');
+    })
+    .catch(function(){
+      norteChatAppend('norte', 'Não consegui acessar seu microfone — verifica se você permitiu o acesso nas configurações do navegador.');
+    });
 }
 
 function showHome(){
