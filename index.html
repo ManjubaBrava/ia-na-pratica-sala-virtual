@@ -175,7 +175,7 @@
   }
   footer{text-align:center; padding:30px; color:#6b7299; font-size:12px;}
 
-  /* ---- Norte: chat/voz flutuante ---- */
+  /* ---- Norte: botão flutuante que abre a tela dedicada ---- */
   .norte-fab{
     position:fixed; right:22px; bottom:22px; z-index:50;
     width:60px; height:60px; border-radius:50%; border:none; cursor:pointer;
@@ -185,37 +185,118 @@
   }
   .norte-fab:hover{transform:scale(1.06);}
   .norte-fab svg{width:26px; height:26px;}
-  .norte-chat-panel{
-    position:fixed; right:22px; bottom:96px; z-index:50; width:360px; max-width:calc(100vw - 32px);
-    height:520px; max-height:calc(100vh - 140px); background:var(--bg2); border:1px solid rgba(125,211,252,0.3);
-    border-radius:18px; box-shadow:0 10px 40px rgba(0,0,0,0.5); display:none; flex-direction:column; overflow:hidden;
+
+  /* ---- Tela dedicada do Norte (estilo painel de comando) ---- */
+  .norte-screen{
+    position:fixed; inset:0; z-index:60; display:none; flex-direction:column;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(56,189,248,0.14), transparent 55%),
+      radial-gradient(circle at 15% 85%, rgba(139,92,246,0.12), transparent 50%),
+      linear-gradient(180deg, #050815 0%, #0a0e27 45%, #0d0730 100%);
+    overflow-y:auto;
   }
-  .norte-chat-panel.open{display:flex;}
-  .norte-chat-head{
-    padding:14px 16px; display:flex; align-items:center; justify-content:space-between;
-    background:rgba(255,255,255,0.04); border-bottom:1px solid rgba(125,211,252,0.15); flex-shrink:0;
+  .norte-screen.open{display:flex;}
+  .norte-screen-close{
+    position:absolute; top:18px; right:22px; z-index:2; background:rgba(255,255,255,0.06);
+    border:1px solid rgba(125,211,252,0.3); color:var(--text); width:34px; height:34px; border-radius:50%;
+    cursor:pointer; font-size:16px;
   }
-  .norte-chat-head strong{font-size:14.5px;}
-  .norte-chat-head button{background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:18px; line-height:1;}
-  .norte-chat-msgs{flex-grow:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:12px;}
-  .norte-msg{max-width:88%; font-size:13.5px; line-height:1.5; padding:10px 13px; border-radius:14px;}
-  .norte-msg.user{align-self:flex-end; background:var(--cyan); color:#06121f; border-bottom-right-radius:4px;}
-  .norte-msg.norte{align-self:flex-start; width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(125,211,252,0.18); border-bottom-left-radius:4px;}
-  .norte-msg .norte-live{margin:0 0 10px; padding:12px 14px;}
-  .norte-msg .norte-live-orb{width:44px; height:44px;}
-  .norte-msg .norte-live-core{width:30px; height:30px;}
-  .norte-chat-input-row{display:flex; gap:8px; padding:12px; border-top:1px solid rgba(125,211,252,0.15); flex-shrink:0;}
+  .norte-screen-header{text-align:center; padding:34px 20px 10px;}
+  .norte-screen-header h1{
+    margin:0; font-size:34px; letter-spacing:6px; color:#fff;
+    text-shadow:0 0 18px rgba(56,189,248,0.7);
+  }
+  .norte-screen-header p{margin:8px 0 0; font-size:12px; letter-spacing:2px; color:var(--cyan-l); text-transform:uppercase;}
+  .norte-online-badge{
+    display:inline-flex; align-items:center; gap:6px; margin-top:14px; font-size:11px; letter-spacing:1.5px;
+    color:#86efac; text-transform:uppercase;
+  }
+  .norte-online-badge .dot{width:7px; height:7px; border-radius:50%; background:#4ade80; box-shadow:0 0 8px #4ade80; animation:norteTalkPulse 1.4s ease-in-out infinite;}
+
+  .norte-screen-body{
+    flex-grow:1; display:grid; grid-template-columns:1fr minmax(260px,340px) 1fr; gap:18px;
+    padding:20px clamp(16px,4vw,40px) 20px; align-items:start;
+  }
+  .norte-panel{
+    background:rgba(10,14,39,0.55); border:1px solid rgba(125,211,252,0.22); border-radius:16px;
+    padding:16px; backdrop-filter:blur(6px);
+  }
+  .norte-panel + .norte-panel{margin-top:16px;}
+  .norte-voice-label, .norte-conv-label, .norte-info-label{
+    font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--cyan-l); font-weight:800; margin-bottom:10px;
+  }
+  .norte-voice-wave{display:flex; align-items:center; gap:3px; height:34px; margin-bottom:8px;}
+  .norte-voice-wave span{flex:1; background:var(--cyan); border-radius:3px; height:6px; opacity:.55; transition:height .12s ease;}
+  .norte-voice-hint{font-size:12.5px; color:var(--text-dim);}
+  .norte-conv-box{margin-top:16px;}
+  .norte-conv-box .norte-chat-msgs{max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:2px;}
+  .norte-info-box + .norte-info-box{margin-top:16px;}
+  .norte-info-box .val{font-size:13.5px; color:#d5deff; line-height:1.5;}
+
+  .norte-orb-col{display:flex; flex-direction:column; align-items:center; gap:20px; padding-top:6px;}
+  .norte-hexring{position:relative; width:min(78vw,340px); height:min(78vw,340px); flex-shrink:0;}
+  .norte-orb-big{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:38%; height:38%; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 40% 32%, #0e1c3a, #05070f);
+    border:2px solid var(--cyan); box-shadow:0 0 30px rgba(56,189,248,0.35);
+  }
+  .norte-orb-big .ring{position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--cyan); opacity:0; animation:norteBreathe 2.6s ease-in-out infinite;}
+  .norte-orb-big .ring.r2{animation-delay:.6s;}
+  .norte-orb-big .ring.r3{animation-delay:1.2s;}
+  .norte-orb-big.talking .ring{border-color:var(--yellow); animation-duration:1.1s;}
+  .norte-orb-core{position:relative; z-index:2; font-size:13px; font-weight:900; letter-spacing:2px; color:var(--cyan-l);}
+  .norte-hex-node{
+    position:absolute; width:88px; text-align:center; font-size:10.5px; letter-spacing:.5px; color:var(--text-dim);
+    cursor:pointer; transform:translate(-50%,-50%);
+  }
+  .norte-hex-node .ic{
+    width:44px; height:44px; margin:0 auto 6px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:19px; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.4); transition:transform .15s, border-color .15s;
+  }
+  .norte-hex-node:hover .ic{transform:translateY(-3px); border-color:var(--cyan-l);}
+  .norte-hex-node span{display:block;}
+
+  .norte-bottom-nav{
+    display:flex; justify-content:center; gap:10px; flex-wrap:wrap; padding:6px 20px 22px;
+  }
+  .norte-bottom-nav button{
+    background:rgba(255,255,255,0.05); border:1px solid rgba(125,211,252,0.25); color:var(--text-dim);
+    padding:9px 16px; border-radius:12px; font-size:12.5px; cursor:pointer; font-weight:700;
+  }
+  .norte-bottom-nav button:hover{color:#fff; border-color:var(--cyan-l);}
+
+  .norte-mic-big{
+    width:64px; height:64px; border-radius:50%; border:none; cursor:pointer; align-self:center; margin-top:2px;
+    background:radial-gradient(circle at 35% 30%, var(--cyan-l), var(--cyan) 60%, #0369a1 100%);
+    box-shadow:0 0 24px rgba(56,189,248,0.5); font-size:24px; display:flex; align-items:center; justify-content:center;
+  }
+  .norte-mic-big.listening{background:radial-gradient(circle at 35% 30%, var(--yellow), #f59e0b 70%); animation:norteTalkPulse .9s ease-in-out infinite;}
+
+  .norte-chat-input-row{display:flex; gap:8px; margin-top:14px;}
   .norte-chat-input-row input{
     flex-grow:1; padding:10px 12px; border-radius:20px; border:1px solid rgba(125,211,252,0.3);
     background:rgba(255,255,255,0.04); color:#fff; font-size:13.5px;
   }
   .norte-chat-input-row button{
     width:38px; height:38px; border-radius:50%; border:none; cursor:pointer; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-size:15px;
+    display:flex; align-items:center; justify-content:center; font-size:15px; background:var(--cyan-l); color:#06121f;
   }
-  .norte-chat-mic{background:rgba(139,92,246,0.18); color:#c4b5fd;}
-  .norte-chat-mic.listening{background:var(--yellow); color:#06121f; animation:norteTalkPulse .9s ease-in-out infinite;}
-  .norte-chat-send{background:var(--cyan-l); color:#06121f;}
+
+  .norte-msg{max-width:92%; font-size:13.5px; line-height:1.5; padding:10px 13px; border-radius:14px;}
+  .norte-msg.user{align-self:flex-end; background:var(--cyan); color:#06121f; border-bottom-right-radius:4px;}
+  .norte-msg.norte{align-self:flex-start; width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(125,211,252,0.18); border-bottom-left-radius:4px;}
+  .norte-msg .norte-live{margin:0 0 10px; padding:12px 14px;}
+  .norte-msg .norte-live-orb{width:44px; height:44px;}
+  .norte-msg .norte-live-core{width:30px; height:30px;}
+
+  @media (max-width:900px){
+    .norte-screen-body{grid-template-columns:1fr; padding:16px 16px 10px;}
+    .norte-panel + .norte-panel{margin-top:0;}
+    .norte-orb-col{order:-1;}
+    .norte-hexring{display:none;}
+    .norte-orb-big{position:static; transform:none; width:130px; height:130px; margin:0 auto;}
+  }
 </style>
 </head>
 <body>
@@ -271,21 +352,71 @@
   <div id="week-content"></div>
 </div>
 
-<button class="norte-fab" id="norte-fab" onclick="norteChatToggle()" title="Falar com o Norte">
+<button class="norte-fab" id="norte-fab" onclick="norteScreenOpen()" title="Falar com o Norte">
   <svg viewBox="0 0 24 24" fill="none" stroke="#06121f" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
 </button>
-<div class="norte-chat-panel" id="norte-chat-panel">
-  <div class="norte-chat-head">
-    <strong>💬 Fale com o Norte</strong>
-    <button onclick="norteChatToggle()">✕</button>
+
+<div class="norte-screen" id="norte-screen">
+  <button class="norte-screen-close" onclick="norteScreenClose()" title="Fechar">✕</button>
+  <div class="norte-screen-header">
+    <h1>NORTE</h1>
+    <p>Sua IA de apoio à eletiva "I.A. na Prática"</p>
+    <div class="norte-online-badge"><span class="dot"></span> Online</div>
   </div>
-  <div class="norte-chat-msgs" id="norte-chat-msgs">
-    <div class="norte-msg norte">Oi! Sou o Norte. Pode me perguntar qualquer coisa sobre a eletiva — prompts, ferramentas de IA, seu projeto... É só escrever ou tocar no microfone pra falar comigo.</div>
+
+  <div class="norte-screen-body">
+    <div class="norte-panel-left">
+      <div class="norte-panel">
+        <div class="norte-voice-label">🎙️ Comando de voz</div>
+        <div class="norte-voice-wave" id="norte-voice-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="norte-voice-hint" id="norte-voice-hint">Toque no microfone e fale com o Norte...</div>
+      </div>
+      <div class="norte-panel norte-conv-box">
+        <div class="norte-conv-label">💬 Conversa</div>
+        <div class="norte-chat-msgs" id="norte-chat-msgs">
+          <div class="norte-msg norte">Oi! Sou o Norte. Pode me perguntar qualquer coisa sobre a eletiva — prompts, ferramentas de IA, seu projeto... É só escrever ou tocar no microfone pra falar comigo.</div>
+        </div>
+        <div class="norte-chat-input-row">
+          <input id="norte-chat-input" type="text" placeholder="Pergunte ao Norte..." onkeydown="if(event.key==='Enter')norteChatSend();">
+          <button onclick="norteChatSend()" title="Enviar">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="norte-orb-col">
+      <div class="norte-hexring" id="norte-hexring">
+        <div class="norte-hex-node" style="top:6%; left:50%;" onclick="norteScreenGoto()"><div class="ic">🧠</div><span>IA no Cotidiano</span></div>
+        <div class="norte-hex-node" style="top:18.9%; left:81.1%;" onclick="norteScreenGoto()"><div class="ic">✍️</div><span>Escrita &amp; Comunicação</span></div>
+        <div class="norte-hex-node" style="top:50%; left:94%;" onclick="norteScreenGoto()"><div class="ic">💼</div><span>Negócio Digital</span></div>
+        <div class="norte-hex-node" style="top:81.1%; left:81.1%;" onclick="norteScreenGoto()"><div class="ic">🤖</div><span>Machine Learning</span></div>
+        <div class="norte-hex-node" style="top:94%; left:50%;" onclick="norteScreenGoto()"><div class="ic">⚖️</div><span>Ética &amp; Privacidade</span></div>
+        <div class="norte-hex-node" style="top:81.1%; left:18.9%;" onclick="norteScreenGoto()"><div class="ic">🎤</div><span>Pitch Final</span></div>
+        <div class="norte-hex-node" style="top:50%; left:6%;" onclick="norteScreenGoto()"><div class="ic">📋</div><span>Roteiros</span></div>
+        <div class="norte-hex-node" style="top:18.9%; left:18.9%;" onclick="norteScreenGoto()"><div class="ic">🎧</div><span>Feedback</span></div>
+        <div class="norte-orb-big idle" id="norte-orb-big" onclick="norteChatListen()">
+          <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+          <div class="norte-orb-core">NORTE</div>
+        </div>
+      </div>
+      <button class="norte-mic-big" id="norte-mic-big" onclick="norteChatListen()" title="Falar com o Norte">🎤</button>
+    </div>
+
+    <div class="norte-panel-right">
+      <div class="norte-panel norte-info-box">
+        <div class="norte-info-label">🎒 Sua turma</div>
+        <div class="val" id="norte-screen-turma">—</div>
+      </div>
+      <div class="norte-panel norte-info-box">
+        <div class="norte-info-label">📌 Próxima semana</div>
+        <div class="val" id="norte-screen-next">—</div>
+      </div>
+    </div>
   </div>
-  <div class="norte-chat-input-row">
-    <button class="norte-chat-mic" id="norte-chat-mic" onclick="norteChatListen()" title="Falar com o Norte">🎤</button>
-    <input id="norte-chat-input" type="text" placeholder="Pergunte ao Norte..." onkeydown="if(event.key==='Enter')norteChatSend();">
-    <button class="norte-chat-send" onclick="norteChatSend()" title="Enviar">➤</button>
+
+  <div class="norte-bottom-nav">
+    <button onclick="norteScreenGoto()">🏠 Início</button>
+    <button onclick="norteScreenGoto()">📚 Semanas</button>
+    <button onclick="norteScreenClose()">✕ Fechar</button>
   </div>
 </div>
 
@@ -863,8 +994,25 @@ const NORTE_ASK_WEBHOOK_URL = ""; // TODO: colar aqui a URL do webhook do N8N (e
 let norteChatMsgCount = 0;
 let norteRecognition = null;
 
-function norteChatToggle(){
-  document.getElementById('norte-chat-panel').classList.toggle('open');
+function norteScreenOpen(){
+  document.getElementById('norte-screen').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const turmaEl = document.getElementById('norte-screen-turma');
+  if (turmaEl) turmaEl.textContent = localStorage.getItem('norteTurma') || 'Ainda não informada — envie o formulário de alguma semana pra eu guardar sua turma.';
+  const nextEl = document.getElementById('norte-screen-next');
+  if (nextEl){
+    const n = Number(norteChatCurrentSemana());
+    const w = WEEKS[n];
+    nextEl.textContent = w ? w.proxima : 'Abra uma semana pra ver o que vem a seguir.';
+  }
+}
+function norteScreenClose(){
+  document.getElementById('norte-screen').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function norteScreenGoto(){
+  norteScreenClose();
+  showHome();
 }
 
 function norteChatAppend(role, html){
@@ -953,25 +1101,51 @@ function norteChatSend(textoForcado){
   });
 }
 
+let norteVoiceWaveTimer = null;
+function norteVoiceWaveAnimate(on){
+  const bars = document.querySelectorAll('#norte-voice-wave span');
+  clearInterval(norteVoiceWaveTimer);
+  if (!on){ bars.forEach(function(b){ b.style.height = '6px'; b.style.opacity = '.55'; }); return; }
+  norteVoiceWaveTimer = setInterval(function(){
+    bars.forEach(function(b){ b.style.height = (6 + Math.random()*28) + 'px'; b.style.opacity = '1'; });
+  }, 110);
+}
 function norteChatListen(){
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition){
     norteChatAppend('norte', 'Seu navegador não suporta reconhecimento de voz. Tenta digitar a pergunta.');
     return;
   }
-  const micBtn = document.getElementById('norte-chat-mic');
+  const micBtn = document.getElementById('norte-mic-big');
+  const orb = document.getElementById('norte-orb-big');
+  const hint = document.getElementById('norte-voice-hint');
   if (norteRecognition){ norteRecognition.stop(); return; }
   norteRecognition = new SpeechRecognition();
   norteRecognition.lang = 'pt-BR';
   norteRecognition.interimResults = false;
   norteRecognition.maxAlternatives = 1;
-  micBtn.classList.add('listening');
+  if (micBtn) micBtn.classList.add('listening');
+  if (orb) orb.classList.add('talking');
+  if (hint) hint.textContent = 'Ouvindo... pode falar.';
+  norteVoiceWaveAnimate(true);
   norteRecognition.onresult = function(e){
     const texto = e.results[0][0].transcript;
+    if (hint) hint.textContent = '"' + texto + '"';
     norteChatSend(texto);
   };
-  norteRecognition.onerror = function(){ micBtn.classList.remove('listening'); norteRecognition = null; };
-  norteRecognition.onend = function(){ micBtn.classList.remove('listening'); norteRecognition = null; };
+  norteRecognition.onerror = function(){
+    if (micBtn) micBtn.classList.remove('listening');
+    if (orb) orb.classList.remove('talking');
+    if (hint) hint.textContent = 'Toque no microfone e fale com o Norte...';
+    norteVoiceWaveAnimate(false);
+    norteRecognition = null;
+  };
+  norteRecognition.onend = function(){
+    if (micBtn) micBtn.classList.remove('listening');
+    if (orb) orb.classList.remove('talking');
+    norteVoiceWaveAnimate(false);
+    norteRecognition = null;
+  };
   norteRecognition.start();
 }
 
