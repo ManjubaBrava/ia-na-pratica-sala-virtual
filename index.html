@@ -1038,7 +1038,7 @@ function norteFbShowResult(n, row){
 // O áudio chega em base64 na resposta do webhook e vira um Blob local (URL.createObjectURL) —
 // por ser "mesma origem" pro navegador, o analisador de frequência funciona de verdade,
 // então esse player usa o MESMO componente animado (bolinha + barrinhas) da narração lá em cima.
-const NORTE_ASK_WEBHOOK_URL = ""; // TODO: colar aqui a URL do webhook do N8N (ex: https://SEUNOME.app.n8n.cloud/webhook/norte-ask)
+const NORTE_ASK_WEBHOOK_URL = "https://norte-ia-pratica.app.n8n.cloud/webhook/norte-ask";
 let norteChatMsgCount = 0;
 
 function norteScreenOpen(){
