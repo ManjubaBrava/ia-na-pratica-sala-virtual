@@ -640,10 +640,10 @@ function norteToggle(suffix){
   const sid = suffix ? '-' + suffix : '';
   const audio = document.getElementById('norte-audio' + sid);
   if (!audio) return;
-  // O áudio de feedback ('fb') vem do Google Drive, outra origem sem CORS liberado —
-  // ligar isso no Web Audio API deixaria o som mudo (áudio "tainted"). Só narração
-  // (mesma origem do site) passa pelo analisador pras barrinhas reagirem de verdade.
-  const useAnalyser = (suffix !== 'fb');
+  // Narração, feedback (audios/feedback/*.mp3 no próprio repo) e chat (blob: local) são
+  // todos "mesma origem" pro navegador, então sempre dá pra usar o analisador de
+  // frequência real e fazer as barrinhas reagirem à voz de verdade.
+  const useAnalyser = true;
   if (audio.paused){
     if (useAnalyser){
       if (!norteCtx) norteCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -829,20 +829,12 @@ function norteFbFetchAndCheck(n, turma){
     });
 }
 
-function norteDriveFileId(url){
-  // Extrai o ID do arquivo do Drive de qualquer formato de link que a planilha guarde.
-  if (!url) return '';
-  const m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  return m ? m[1] : '';
-}
-// URL do Web App do Apps Script que serve o mp3 do Drive com Content-Type de áudio
-// (o link direto do Drive não funciona numa tag <audio>). Preencher depois do deploy.
-const NORTE_AUDIO_PROXY_URL = "";
 function norteFbShowResult(n, row){
   const texto = row['Texto do Feedback (Norte)'] || '';
-  const rawUrl = row['Áudio Feedback (Norte)'] || '';
-  const fileId = norteDriveFileId(rawUrl);
-  const audioUrl = (fileId && NORTE_AUDIO_PROXY_URL) ? (NORTE_AUDIO_PROXY_URL + '?id=' + fileId) : '';
+  // O Apps Script sobe o mp3 direto pro repositório (audios/feedback/...) e guarda esse
+  // caminho relativo aqui — mesma origem do site, então o player usa o mesmo componente
+  // (bolinha + barrinhas reagindo à voz de verdade) da narração lá em cima.
+  const audioUrl = row['Áudio Feedback (Norte)'] || '';
   let audioHtml = '';
   if (audioUrl){
     audioHtml =
@@ -855,8 +847,6 @@ function norteFbShowResult(n, row){
         '<div class="norte-live-badge" id="norte-badge-fb">🎧 Ouvir</div>' +
       '</div>' +
       '<audio id="norte-audio-fb" src="' + audioUrl + '" preload="none"></audio>';
-  } else if (rawUrl){
-    audioHtml = '<a class="btn btn-ghost" style="font-size:12px; padding:7px 14px;" href="' + rawUrl + '" target="_blank" rel="noopener">🔊 Abrir áudio em nova aba</a>';
   }
   norteFbSetState(
     audioHtml +
